@@ -242,6 +242,7 @@ export interface AndroidNativeWebViewProps extends CommonNativeWebViewProps {
   domStorageEnabled?: boolean;
   geolocationEnabled?: boolean;
   javaScriptEnabled?: boolean;
+  ignoreSslError?: boolean;
   mixedContentMode?: 'never' | 'always' | 'compatibility';
   onContentSizeChange?: (event: WebViewEvent) => void;
   overScrollMode?: OverScrollModeType;
@@ -575,6 +576,12 @@ export interface WebViewSharedProps extends ViewProps {
    * @platform android
    */
   javaScriptEnabled?: boolean;
+
+  /**
+   * Boolean value to disable ssl check
+   * @platform android
+   */
+  ignoreSslError?: boolean;
 
   /**
    * Function that returns a view to show if there's an error.
