@@ -1,5 +1,4 @@
 package com.reactnativecommunity.webview;
-
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.DownloadManager;
@@ -10,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.Manifest;
+import android.net.http.SslError;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -27,6 +27,7 @@ import android.webkit.DownloadListener;
 import android.webkit.GeolocationPermissions;
 import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
+import android.webkit.SslErrorHandler;
 import android.webkit.URLUtil;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -232,6 +233,12 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
     view.getSettings().setJavaScriptEnabled(enabled);
   }
 
+  @ReactProp(name = "ignoreSslError")
+  public void setIgnoreSslError(WebView view, boolean ignoreSslError) {
+    ((ReactWebView) view).setIgnoreSslError(ignoreSslError);
+  }
+
+
   @ReactProp(name = "showsHorizontalScrollIndicator")
   public void setShowsHorizontalScrollIndicator(WebView view, boolean enabled) {
     view.setHorizontalScrollBarEnabled(enabled);
@@ -369,7 +376,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
   public void setMessagingEnabled(WebView view, boolean enabled) {
     ((RNCWebView) view).setMessagingEnabled(enabled);
   }
-   
+
   @ReactProp(name = "incognito")
   public void setIncognito(WebView view, boolean enabled) {
     // Remove all previous cookies
@@ -732,6 +739,18 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
         new TopLoadingErrorEvent(webView.getId(), eventData));
     }
 
+    @Override
+    public void onReceivedSslError(WebView webView, SslErrorHandler handler, SslError error) {
+      boolean ignoreSslError = ((ReactWebView) webView).getIgnoreSslError();
+      if (ignoreSslError) {
+        // Ignore the Ssl error
+        handler.proceed();
+      }
+      else {
+        super.onReceivedSslError(webView, handler, error);
+      }
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public void onReceivedHttpError(
@@ -921,6 +940,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
   protected static class RNCWebView extends WebView implements LifecycleEventListener {
     protected @Nullable
     String injectedJS;
+    private boolean ignoreSslError;
     protected boolean messagingEnabled = false;
     protected @Nullable
     RNCWebViewClient mRNCWebViewClient;
@@ -944,6 +964,14 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
 
     public void setHasScrollEvent(boolean hasScrollEvent) {
       this.hasScrollEvent = hasScrollEvent;
+    }
+
+    public void setIgnoreSslError(boolean ignoreSslError) {
+      this.ignoreSslError = ignoreSslError;
+    }
+
+    public boolean getIgnoreSslError() {
+      return this.ignoreSslError;
     }
 
     @Override
